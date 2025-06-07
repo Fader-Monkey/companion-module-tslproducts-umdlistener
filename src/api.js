@@ -1,7 +1,7 @@
 const {InstanceStatus } = require('@companion-module/base');
 
 const TSLUMD 					= require('tsl-umd'); // TSL 3.1 UDP package
-//const TSLUMDv5                  = require('tsl-umd-v5');
+const TSLUMDv5                  = require('tsl-umd-v5');
 const net 						= require('net');
 const packet 					= require('packet');
 
@@ -21,6 +21,7 @@ module.exports = {
 			case 'tsl4.0':
 				break;
 			case 'tsl5.0':
+				setupTSL5(self,port, portType)
 				break;
 			default:
 				break;
@@ -61,7 +62,7 @@ module.exports = {
 		}
 	}
 }
-
+// Setup TSVv3.1
 function setupTSL31(self, port, portType) {
 	try {
 		if (portType == 'udp') {
@@ -111,7 +112,93 @@ function setupTSL31(self, port, portType) {
 		self.setVariableValues({'module_state': 'Error - See Log.'});
 	}
 }
+// TSL v5 start
+function setupTSL5(self, port, portType) {
+	try {
+		if (portType == 'udp') {
+			self.SERVER = new TSLUMD(port);
+			self.log('info', `TSL 5 Server started. Listening for data on UDP Port: ${port}`);
+			//start edit v5
+			self.SERVER.on('message',(msg, rinfo) => {
+            this.processTally(msg, rinfo.address)
+            debug('UDP Message recieved: ', msg)
+        })  //end edit v5
 
+        server.on('listening', () => {
+            var address = server.address();
+            debug(`server listening ${address.address}:${address.port}`);
+        });
+
+        server.on('error', (err) => {
+            debug('UDP server error: ', err);
+            throw err;
+        });
+    }
+		}
+		else if (portType == 'tcp') {
+			 listenTCP(port) {
+        var server = net.createServer((socket) => {
+
+            socket.on('data', (data) => {
+                this.processTally(data, socket.remoteAddress)
+                debug('TCP Message recieved: ', data)
+            })
+
+            socket.on('close', () => {
+                debug('TCP socket closed')
+            })
+
+            socket.on('error', (err) => {
+                debug('UDP server error: ', err);
+                throw err;
+            })
+        })
+        server.listen(port)
+    }
+
+    processTally(data, source) {
+        let buf = Buffer.from(data)
+        let tally = { display: {} }
+
+        //Strip DLE/STX if present and un-stuff any DLE stuffing
+        if (buf[0] == this._DLE && buf[1] == this._STX) {
+            buf = buf.subarray(2)
+            
+            for (let index = 4; index < buf.length; index++) {
+
+                if ((buf[index] == this._DLE) && (buf[index + 1] == this._DLE)) {
+                  buf = Buffer.concat([buf.subarray(0, index), buf.subarray(index + 2)])
+                }
+              }
+        }
+        tally.sender  = source ? source : undefined
+        tally.pbc     = buf.readInt16LE(this._PBC)
+        tally.ver     = buf.readInt8(this._VER)
+        tally.flags   = buf.readInt8(this._VER)
+        tally.screen  = buf.readInt16LE(this._SCREEN)
+        tally.index   = buf.readInt16LE(this._INDEX)
+        tally.control = buf.readInt16LE(this._CONTROL)
+        tally.length  = buf.readInt16LE(this._LENGTH)
+        tally.display.text = buf.toString('ascii', this._LENGTH+2)
+
+        tally.display.rh_tally     = (tally.control >> 0 & 0b11);
+		tally.display.text_tally   = (tally.control >> 2 & 0b11);
+		tally.display.lh_tally     = (tally.control >> 4 & 0b11);
+		tally.display.brightness   = (tally.control >> 6 & 0b11);
+		tally.display.reserved     = (tally.control >> 8 & 0b1111111);
+		tally.display.control_data = (tally.control >> 15 & 0b1);
+
+        this.emit('message', tally)
+    }
+// v5 setup
+    listenUDP(port) {
+        var server = dgram.createSocket('udp4')
+        server.bind(port)
+
+        //
+
+   // old tcp 
+// v3 processing
 function processTSL31Tally(tally) {
 	let self = this;
 
