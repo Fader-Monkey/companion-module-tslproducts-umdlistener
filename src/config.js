@@ -38,7 +38,7 @@ module.exports = {
 				choices: [
 					{ id: 'tsl3.1', label: 'TSL 3.1' },
 					//{ id: 'tsl4.0', label: 'TSL 4.0' },
-					//{ id: 'tsl5.0', label: 'TSL 5.0' }
+					{ id: 'tsl5.0', label: 'TSL 5.0' }
 				]
 			},
 			{
