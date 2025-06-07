@@ -1,7 +1,7 @@
 const {InstanceStatus } = require('@companion-module/base');
 
 const TSLUMD 					= require('tsl-umd'); // TSL 3.1 UDP package
-//const TSLUMDv5                  = require('tsl-umd-v5');
+const TSLUMDv5                  = require('tsl-umd-v5');
 const net 						= require('net');
 const packet 					= require('packet');
 
