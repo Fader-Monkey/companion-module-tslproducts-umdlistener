@@ -21,6 +21,8 @@ module.exports = {
 			case 'tsl4.0':
 				break;
 			case 'tsl5.0':
+				//startTSL5Listener(self) //maybe remove?
+				startTSL5Listener(this)
 				break;
 			default:
 				break;
@@ -61,7 +63,45 @@ module.exports = {
 		}
 	}
 }
+//new
+const { createListener } = require('tsl-umd-v5');
 
+function startTSL5Listener(self) {
+  const listener = createListener({
+    protocol: 'udp',     // Can be 'udp' or 'tcp'
+    port: 65000          // Use appropriate port
+  });
+
+  listener.on('message', (umd) => {
+    // Example message object:
+    // {
+    //   address: 1,
+    //   label: 'Camera 1',
+    //   tally: {
+    //     red: true,
+    //     green: false,
+    //     yellow: false
+    //   }
+    // }
+
+    self.log('debug', `TSL 5.0 UMD received: ${JSON.stringify(umd)}`);
+
+    // Example: Trigger feedback
+    self.checkFeedbacks('tally');
+
+    // Save/update the UMD data for use in Companion's feedbacks
+    self.tslData = self.tslData || {};
+    self.tslData[umd.address] = umd;
+  });
+
+  listener.on('error', (err) => {
+    self.log('error', `TSL 5.0 listener error: ${err}`);
+  });
+
+  self.log('info', 'TSL 5.0 listener started on port 65000');
+}
+
+//end new
 function setupTSL31(self, port, portType) {
 	try {
 		if (portType == 'udp') {
