@@ -10,7 +10,25 @@ module.exports = {
         const backgroundColorRed = combineRgb(255, 0, 0) // Red
         const backgroundColorGreen = combineRgb(0, 255, 0) // Green
         const backgroundColorOrange = combineRgb(255, 102, 0) // Orange
+//new
+feedbacks.tally = {
+  type: 'boolean',
+  name: 'Tally Active',
+  options: [
+    {
+      type: 'number',
+      label: 'UMD Address',
+      id: 'address',
+      default: 1,
+    },
+  ],
+  callback: (feedback) => {
+    const data = self.tslData?.[feedback.options.address];
+    return data?.tally?.red === true;
+  },
+};
 
+//end new	    
         feedbacks['tallyState'] = {
             type: 'boolean',
             name: 'Show Tally State On Button',
